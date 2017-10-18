@@ -6,17 +6,16 @@
     <div id="simon">
 
       <div id="status">
-        ???
       </div>
 
       <div class="row">
-        <div id="green" class="light col" v-on:click="captureTap('green')"></div>
-        <div id="red" class="light col" v-on:click="captureTap('red')"></div>
+        <div id="green" class="light col" v-bind:class="{'bright':greenBright}" v-on:click="captureTap('green')"></div>
+        <div id="red" class="light col" v-bind:class="{'bright':redBright}" v-on:click="captureTap('red')"></div>
       </div>
 
       <div class="row">
-        <div id="yellow" class="light col" v-on:click="captureTap('yellow')"></div>
-        <div id="blue" class="light col" v-on:click="captureTap('blue')"></div>
+        <div id="yellow" class="light col" v-bind:class="{'bright':yellowBright}" v-on:click="captureTap('yellow')"></div>
+        <div id="blue" class="light col" v-bind:class="{'bright':blueBright}" v-on:click="captureTap('blue')"></div>
       </div>
 
     </div>
@@ -41,6 +40,12 @@ export default {
       longest: 0,
       sequence: [],
       taps: [],
+      greenBright: false,
+      redBright: false,
+      yellowBright: false,
+      blueBright: false,
+      sequenceCountdown: 0,
+      canTap: false,
       lights: [ 'red', 'green', 'yellow', 'blue' ]
     }
   },
@@ -58,7 +63,7 @@ export default {
       this.sequence = [];
       this.addToSequence();
       this.playSequence();
-      this.startTime();
+      this.startTimer();
     },
 
     chooseRandomLight: function() {
@@ -72,11 +77,76 @@ export default {
     },
 
     playSequence: function() {
+      
+      this.sequenceCountdown=this.sequence.length;
+
+      for(var i=0; i<this.sequence.length; i++){
+        this.makeBright();
+        }
+    },
+
+    makeBright: function(){
+      if(this.sequence[0]==='green'){
+        this.greenBright=true;
+      }
+      else if(this.sequence[0]==='yellow'){
+        this.yellowBright=true;
+      }
+      else if(this.sequence[0]==='red'){
+        this.redBright=true;
+      }
+      else{
+        this.blueBright=true;
+      }
+           
+      // this calls the reset function
+      setTimeout(this.makeDim, 1000);
+      
+    },
+
+    makeDim: function(){
+      console.log(this.sequence[0] + " back to dim");
+      // this needs to set the color BACK TO NORMAL
+      // this.sequence[0] is how to capture the current color
+      if(this.greenBright){
+          this.greenBright = !this.greenBright;
+      }
+      else if(this.yellowBright){
+          this.yellowBright = !this.yellowBright;
+      }
+      else if(this.redBright){
+        this.redBright = !this.redBright;
+      }
+      else{
+        this.blueBright = !this.blueBright;
+      }
+
+      // if there is more left to cycle through
+          if(this.sequenceCountdown>0){
+            console.log("the sequence countown is: " + this.sequenceCountdown);
+            console.log('this is where you make the squares clickable');
+            this.canTap=true;
+            
+            
+            this.sequenceCountdown--;
+            console.log("sequence countdown is: " + this.sequenceCountdown);
+           //I want this to start it over again
+          }
+
+      // console.log(this.sequence[]);
 
     },
 
-    captureTap: function() {
-
+    captureTap: function(color) {
+        if(this.canTap){
+          alert('you tapped - ' + color);
+        }
+        if(this.sequenceCountdown>0){
+          this.playSequence();
+        }
+        else{
+          alert('you done');
+        }
     },
 
     startTimer: function() {
