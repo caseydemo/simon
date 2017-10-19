@@ -25,8 +25,8 @@
     </div>
 
     <div id="history">
-      <p><strong>Current Sequence:</strong> {{ current }}</p>
-      <p><strong>Longest Sequence:</strong> {{ longest }}</p>
+     <!--  <p><strong>Current Sequence:</strong> {{ current }}</p>
+      <p><strong>Longest Sequence:</strong> {{ longest }}</p> -->
     </div>
 
   </div>
@@ -37,17 +37,18 @@ export default {
   name: 'app',
   data () {
     return {
-      longest: 0,
+    // longest: 0,
       sequence: [],
-      sequenceCount:0, // this is used to move the sequence array forward 
+      sequenceIndex:0, // this is used to move the sequence array forward 
       sequenceCountdown:2,
       taps: [],
-      count:0, // this is used in the check for pairs function
+      tapsIndex:0, // this is used in the check for pairs function
       greenBright: false,
       redBright: false,
       yellowBright: false,
       blueBright: false,
       canTap: false,
+      turnTimer:false,
       lights: [ 'red', 'green', 'yellow', 'blue' ]
     }
   },
@@ -61,16 +62,17 @@ export default {
   },
   methods: {
 
+    // starts the playing sequence
     start: function() {
       this.sequence = [];
-      this.addToSequence();
+      this.addToSequence();  
       this.playSequence();
-      this.startTimer();
+    //  this.startTimer();
     },
     reStart: function(){
       this.addToSequence();
       this.playSequence();
-      this.startTimer();
+   //   this.startTimer();
 
     },
 
@@ -80,50 +82,44 @@ export default {
       return this.lights[index];
     },
 
+    // adds a random light to the sequence array
     addToSequence: function() {
-      this.sequence.push(this.chooseRandomLight());
-      console.log('sequenceCountdown is: ' + this.sequenceCountdown);
-      
-      console.log(this.sequence);
+        this.sequence.push(this.chooseRandomLight());
+        console.log('Countdown at random light is: ' + this.sequenceCountdown);
+        
+        console.log(this.sequence);
     },
 
+    // calls the make bright function
     playSequence: function() {
-      
-     // this.sequenceCountdown=this.sequence.length;
-
-      
-        this.makeBright(this.sequenceCount);
+         this.makeBright(this.sequenceIndex); // also sends makeBright the index in the sequence to use
         
     },
 
-    makeBright: function(count){
-
-    //  console.log("sequenceCount is: " + this.sequenceCount);
-    //  console.log('color should be: ' + this.sequence[count]);
+    // lights up specified box 
+    makeBright: function(count){ // count is the index in the sequence the color resides in
 
 
-      if(this.sequence[this.sequenceCount]==='green'){
+      if(this.sequence[this.sequenceIndex]==='green'){
         this.greenBright=true;
       }
-      else if(this.sequence[this.sequenceCount]==='yellow'){
+      else if(this.sequence[this.sequenceIndex]==='yellow'){
         this.yellowBright=true;
       }
-      else if(this.sequence[this.sequenceCount]==='red'){
+      else if(this.sequence[this.sequenceIndex]==='red'){
         this.redBright=true;
       }
       else{
         this.blueBright=true;
       }
            
-      // this calls the reset function
+      // calls the makeDim function at 1 sec interval
       setTimeout(this.makeDim, 1000);
       
     },
 
+    // turns the light off
     makeDim: function(){
-   //   console.log(this.sequence[0] + " back to dim");
-      // this needs to set the color BACK TO NORMAL
-      // this.sequence[0] is how to capture the current color
       if(this.greenBright){
           this.greenBright = !this.greenBright;
       }
@@ -137,40 +133,48 @@ export default {
         this.blueBright = !this.blueBright;
       }
 
-        // if there are more lights for simon to display
-         this.sequenceCountdown--;
-         console.log('sequenceCountdown is: ' + this.sequenceCountdown);
-         
-          if(this.sequenceCountdown>0){
-            
-            this.sequenceCount++;
+      this.sequenceCountdown--;
+       console.log('countdown after bulb is dimmed' + this.sequenceCountdown);
+      
+      // if there ARE MORE lights in the sequence
+      if(this.sequenceCountdown>0){
+        
+        // move the index forward in the sequence
+        this.sequenceIndex++;
 
-        //   console.log("sequenceCount just before calling make bright again: " + this.sequenceCount);
-            setTimeout(this.reStart, 1000);     
-          }
+        // call the RESTART function at one second
+        setTimeout(this.reStart, 1000);     
+       }
 
-          // if it's the user's turn
-          else{
-            this.canTap=true; // user can tap - maybe start a timer
-           
-          }
-
-
+      // if there are NO MORE lights in the sequence
+      else if(this.sequenceCountdown===0){
+        this.canTap=true; // user can tap - maybe start a timer
+        this.startTimer();
+        this.turnTimer=true; // allows timer to start
+        console.log('turn timer was called');
+       }
     },
 
     captureTap: function(color) {
           
-          this.taps.push(color);
-          this.count++;
-         console.log(this.taps);
-         console.log('count' + this.count);
+          // if CAN TAP is true : it's the players turn
+          if(this.canTap){
+            this.taps.push(color);
+            console.log('taps ' + this.taps);
 
+          //  this.makeBright(this.taps[this.tapsIndex]);
+            console.log('color: ' + this.taps[this.tapsIndex])
 
+            console.log("just added " + color + " to the taps array at index " + this.tapsIndex);
+            this.tapsIndex++;
+            // if TAPS is as long as SEQUENCE
+            if(this.taps.length===this.sequence.length){
 
-          if(this.count===this.sequence.length){
+              // check all pairs
               this.checkPairs();
+              this.canTap=false;
              }
-          
+          }
       },
 
 
@@ -181,11 +185,17 @@ export default {
           if(this.sequence[i]===this.taps[i]){
             pairMatch++;
             if(pairMatch===this.sequence.length){
-              alert('you won');
+             
+              this.turnTimer=false;
+              clearTimeout(this.startTimer);
+              alert('good job... lets make this harder');
+              this.reStart();
+              console.log('Restart function was called');
             }
           }
           else{
             alert('nope');
+            this.turnTimer=false;
             break;
           }
 
@@ -194,7 +204,13 @@ export default {
     },
 
     startTimer: function() {
-
+      setTimeout(this.timeout, 5000);
+    },
+    timeout: function(){
+      if(this.turnTimer){
+      alert('time\'s up');
+      }
+      console.log('timout ended');
     }
 
   }
