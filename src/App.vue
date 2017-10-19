@@ -39,12 +39,14 @@ export default {
     return {
       longest: 0,
       sequence: [],
+      sequenceCount:0, // this is used to move the sequence array forward 
+      sequenceCountdown:2,
       taps: [],
+      count:0, // this is used in the check for pairs function
       greenBright: false,
       redBright: false,
       yellowBright: false,
       blueBright: false,
-      sequenceCountdown: 0,
       canTap: false,
       lights: [ 'red', 'green', 'yellow', 'blue' ]
     }
@@ -65,34 +67,48 @@ export default {
       this.playSequence();
       this.startTimer();
     },
+    reStart: function(){
+      this.addToSequence();
+      this.playSequence();
+      this.startTimer();
+
+    },
 
     chooseRandomLight: function() {
       var index = Math.floor(Math.random() * 4);
-      console.log(index);
+     // console.log(index);
       return this.lights[index];
     },
 
     addToSequence: function() {
       this.sequence.push(this.chooseRandomLight());
+      console.log('sequenceCountdown is: ' + this.sequenceCountdown);
+      
+      console.log(this.sequence);
     },
 
     playSequence: function() {
       
-      this.sequenceCountdown=this.sequence.length;
+     // this.sequenceCountdown=this.sequence.length;
 
-      for(var i=0; i<this.sequence.length; i++){
-        this.makeBright();
-        }
+      
+        this.makeBright(this.sequenceCount);
+        
     },
 
-    makeBright: function(){
-      if(this.sequence[0]==='green'){
+    makeBright: function(count){
+
+    //  console.log("sequenceCount is: " + this.sequenceCount);
+    //  console.log('color should be: ' + this.sequence[count]);
+
+
+      if(this.sequence[this.sequenceCount]==='green'){
         this.greenBright=true;
       }
-      else if(this.sequence[0]==='yellow'){
+      else if(this.sequence[this.sequenceCount]==='yellow'){
         this.yellowBright=true;
       }
-      else if(this.sequence[0]==='red'){
+      else if(this.sequence[this.sequenceCount]==='red'){
         this.redBright=true;
       }
       else{
@@ -105,7 +121,7 @@ export default {
     },
 
     makeDim: function(){
-      console.log(this.sequence[0] + " back to dim");
+   //   console.log(this.sequence[0] + " back to dim");
       // this needs to set the color BACK TO NORMAL
       // this.sequence[0] is how to capture the current color
       if(this.greenBright){
@@ -121,32 +137,60 @@ export default {
         this.blueBright = !this.blueBright;
       }
 
-      // if there is more left to cycle through
+        // if there are more lights for simon to display
+         this.sequenceCountdown--;
+         console.log('sequenceCountdown is: ' + this.sequenceCountdown);
+         
           if(this.sequenceCountdown>0){
-            console.log("the sequence countown is: " + this.sequenceCountdown);
-            console.log('this is where you make the squares clickable');
-            this.canTap=true;
             
-            
-            this.sequenceCountdown--;
-            console.log("sequence countdown is: " + this.sequenceCountdown);
-           //I want this to start it over again
+            this.sequenceCount++;
+
+        //   console.log("sequenceCount just before calling make bright again: " + this.sequenceCount);
+            setTimeout(this.reStart, 1000);     
           }
 
-      // console.log(this.sequence[]);
+          // if it's the user's turn
+          else{
+            this.canTap=true; // user can tap - maybe start a timer
+           
+          }
+
 
     },
 
     captureTap: function(color) {
-        if(this.canTap){
-          alert('you tapped - ' + color);
-        }
-        if(this.sequenceCountdown>0){
-          this.playSequence();
-        }
-        else{
-          alert('you done');
-        }
+          
+          this.taps.push(color);
+          this.count++;
+         console.log(this.taps);
+         console.log('count' + this.count);
+
+
+
+          if(this.count===this.sequence.length){
+              this.checkPairs();
+             }
+          
+      },
+
+
+    checkPairs: function(){
+      var pairMatch=0;
+      
+      for(var i=0; i<this.sequence.length; i++){
+          if(this.sequence[i]===this.taps[i]){
+            pairMatch++;
+            if(pairMatch===this.sequence.length){
+              alert('you won');
+            }
+          }
+          else{
+            alert('nope');
+            break;
+          }
+
+      }
+             
     },
 
     startTimer: function() {
