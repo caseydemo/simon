@@ -1,23 +1,30 @@
 <template>
   <div id="app">
 
-    <h1>Vuemon</h1>
-
+    <h1>Simon</h1>
     <div id="simon">
+        <div class="display">
+          <div id="turnIndicator" class="panel panel-danger" v-bind:class="{'playerTurn':!canTap}">
+            <div class="panel-heading">
+            <h3 class="panel-title">Your Turn!</h3>
+          </div>
+        </div>
+    </div>
 
-      <div id="status">
-      </div>
 
-      <div class="row">
-        <div id="green" class="light col" v-bind:class="{'bright':greenBright}" v-on:click="captureTap('green')"></div>
+    <div class="sequence-display">{{sequenceDisplay}}</div>
+
+    <div class="row">
+        <div id="green" class="light col" v-bind:class="{'bright':greenBright}" v-on:click="captureTap('green')">
+        </div>
         <div id="red" class="light col" v-bind:class="{'bright':redBright}" v-on:click="captureTap('red')"></div>
       </div>
-
       <div class="row">
-        <div id="yellow" class="light col" v-bind:class="{'bright':yellowBright}" v-on:click="captureTap('yellow')"></div>
-        <div id="blue" class="light col" v-bind:class="{'bright':blueBright}" v-on:click="captureTap('blue')"></div>
+        <div id="yellow" class="light col" v-bind:class="{'bright':yellowBright}" v-on:click="captureTap('yellow')">
+        </div>
+        <div id="blue" class="light col" v-bind:class="{'bright':blueBright}" v-on:click="captureTap('blue')">
+        </div>
       </div>
-
     </div>
 
     <div id="controls" class="row">
@@ -25,8 +32,6 @@
     </div>
 
     <div id="history">
-     <!--  <p><strong>Current Sequence:</strong> {{ current }}</p>
-      <p><strong>Longest Sequence:</strong> {{ longest }}</p> -->
     </div>
 
   </div>
@@ -38,6 +43,7 @@ export default {
   data () {
     return {
     // longest: 0,
+     //playerTurn:false,
       sequence: [],
       sequenceIndex:0, // this is used to move the sequence array forward 
       sequenceCountdown:1,
@@ -50,6 +56,9 @@ export default {
       canTap: false,
       turnTimer:false,
       tapCounter:0,
+      sequenceCounter:0,
+      sequenceDisplay:0,
+      turnMessage: 'it\'s your turn!',
       lights: [ 'red', 'green', 'yellow', 'blue' ]
     }
   },
@@ -63,7 +72,6 @@ export default {
   },
   methods: {
 
-    // starts the playing sequence
     start: function() {
       this.sequence = [];
       this.taps = [];
@@ -71,15 +79,23 @@ export default {
       this.playSequence();
     },
     reStart: function(){
-      console.log("restart called");
+      this.tapCounter=0;
+      this.sequenceCounter=0;
       this.taps = [];
-      console.log("taps was just reset");
       this.addToSequence();
       this.sequenceIndex=0;
       this.tapsIndex=0;
       this.sequenceCountdown=this.sequence.length;
       this.playSequence();
 
+    },
+    destroyGame: function(){
+        this.tapCounter=0;
+        this.sequenceCounter=0;
+        this.canTap=false;
+        this.sequenceIndex=0;
+        this.tapsIndex=0;
+        this.sequenceCountdown=1;
     },
 
     chooseRandomLight: function() {
@@ -95,7 +111,8 @@ export default {
     // adds a random light to the sequence array
     addToSequence: function() {
         this.sequence.push(this.chooseRandomLight());
-    //    console.log(this.sequence);
+        console.log( 'sequence: ' + JSON.stringify( this.sequence ) );
+
         
     },
 
@@ -132,19 +149,19 @@ export default {
     sequenceDim: function(){
           if(this.greenBright){
               this.greenBright = !this.greenBright;
-              console.log('green lit up');
+              // console.log('green lit up');
           }
             else if(this.yellowBright){
                 this.yellowBright = !this.yellowBright;
-                console.log('yellow lit up');
+                // console.log('yellow lit up');
             }
             else if(this.redBright){
               this.redBright = !this.redBright;
-              console.log('red lit up');
+              // console.log('red lit up');
             }
             else{
               this.blueBright = !this.blueBright;
-              console.log('blue lit up');
+              // console.log('blue lit up');
             }
 
           this.sequenceCountdown--;
@@ -162,28 +179,44 @@ export default {
           // if there are NO MORE lights in the sequence
           else if(this.sequenceCountdown===0){
             this.canTap=true; // user can tap - maybe start a timer
+            this.sequenceDisplay=this.sequence.length;
            }
     },
 
     tapBright: function(color){
-      switch(this.taps[this.tapsIndex]) {
+
+    //  console.log('tapbright called');
+      
+      switch(color) {
     case 'red':
         this.redBright=true;
+        setTimeout(this.tapDim, 200);
         break;
     case 'green':
-        this.redBright=true;
+        this.greenBright=true;
+      //  console.log("green should have lit up");
+        setTimeout(this.tapDim, 200);
         break;
     case 'yellow':
         this.yellowBright=true;
+        setTimeout(this.tapDim, 200);
         break;
-    case 'bue':
+    case 'blue':
         this.blueBright=true;
+      //  console.log('blue should be lit up');
+        setTimeout(this.tapDim, 200);
         break;
-    setTimeout(this.tapDim, 400);
+    
   }
     },
     tapDim: function(){
+      this.redBright=false;
+      this.greenBright=false;
+      this.yellowBright=false;
+      this.blueBright=false;
 
+      setTimeout(this.firstCheck, 200);
+      // console.log('called first check');
     },
 
     captureTap: function(color) {
@@ -192,15 +225,44 @@ export default {
         // if CAN TAP is true : it's the players turn
         if(this.canTap){
         //  console.log( 'taps length[' + this.taps.length + '] tapsIndex[' + this.tapsIndex + ']');
-
+          this.tapBright(color);
           this.taps.push(color);
           this.tapsIndex++;
-          this.tapsMeasure();
+        //  console.log("taps index " + this.tapsIndex);
+          
+          // check as we add each element
+          // console.log('this is the whole taps array: ');
+          console.log( 'taps: ' + JSON.stringify( this.taps ) );
+
+          // console.log('this is the whole sequence array: ');
+          console.log( 'sequence: ' + JSON.stringify( this.sequence ) );
+
+          // console.log("this is what we just passed in: " + this.taps[this.taps.length-1]);
+          // console.log(this.taps[this.taps.length-1] + ", " + this.sequence[this.tapsIndex]);
+
         }
+      },
+      firstCheck: function(){
+        // console.log('just entered first check');
+
+        console.log('this.taps: ' + this.taps[this.tapCounter]);
+        console.log('this.sequence: ' + this.sequence[this.sequenceCounter]);
+
+          if(this.taps[this.tapCounter]===this.sequence[this.sequenceCounter]){
+
+            this.tapsMeasure();
+
+          }
+          else{
+            alert('nope. wrong. your bad');
+            this.destroyGame();
+          }
+          
+        
       },
     tapsMeasure: function(){
 
-      console.log("just entered tapsMeasure ");
+      // console.log("just entered tapsMeasure ");
       // if TAPS is as long as SEQUENCE
       if(this.tapsIndex===this.sequence.length){
         this.checkPairs();
@@ -214,20 +276,20 @@ export default {
     checkPairs: function(){
       var pairMatch=0;
 
-      console.log( 'taps: ' + JSON.stringify( this.taps ) );
-      console.log( 'sequence: ' + JSON.stringify( this.sequence ) );
+    //  console.log( 'taps: ' + JSON.stringify( this.taps ) );
+    //  console.log( 'sequence: ' + JSON.stringify( this.sequence ) );
 
       var sl = this.sequence.length;
 
-      console.log("just entered checkPairs");
-      console.log("1. sl: " + sl);
-      console.log("2. pairMatch count: " + pairMatch);
-      console.log("");
+    //  console.log("just entered checkPairs");
+    //  console.log("1. sl: " + sl);
+    //  console.log("2. pairMatch count: " + pairMatch);
+    //  console.log("");
 
       for(var i=0; i<sl; i++){
         if(this.sequence[i]===this.taps[i]){
           pairMatch++;
-          console.log(pairMatch + " match(s)");
+    //      console.log(pairMatch + " match(s)");
         }
         else {
           console.log("mis-match");
@@ -237,11 +299,11 @@ export default {
       }
 
       if(pairMatch===this.sequence.length){
-          console.log('good - let\'s press restart');
+    //      console.log('good - let\'s press restart');
           this.reStart();
         }
         else{
-          console.log("this is the second else statement don't do anything");
+    //      console.log("this is the second else statement don't do anything");
         }         
     },
 
@@ -258,6 +320,10 @@ export default {
 </script>
 
 <style lang="scss">
+body{
+  background-image: url("../sky-background.jpg");
+
+}
 #app {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -265,6 +331,9 @@ export default {
   text-align: center;
   color: #2c3e50;
   margin-top: 60px;
+  margin-left: 400px;
+  margin-right: 450px;
+   color:white;
 }
 
 h1, h2 {
@@ -312,7 +381,7 @@ a {
 
 .light {
   margin: 20px;
-  border: 1px solid #000;
+  border: 5px solid #000;
 }
 
 #red {
@@ -345,6 +414,18 @@ a {
 
 .bright {
   opacity: 1.0 !important;
+}
+
+.playerTurn{
+  display:none;
+}
+
+.display{
+  margin: auto;
+  width: 100px;
+  height: 60px;
+  border:solid;
+
 }
 
 
