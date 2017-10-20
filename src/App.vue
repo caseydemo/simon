@@ -66,10 +66,14 @@ export default {
     // starts the playing sequence
     start: function() {
       this.sequence = [];
+      this.taps = [];
       this.initializeSequence();
       this.playSequence();
     },
     reStart: function(){
+      console.log("restart called");
+      this.taps = [];
+      console.log("taps was just reset");
       this.addToSequence();
       this.sequenceIndex=0;
       this.tapsIndex=0;
@@ -128,15 +132,19 @@ export default {
     sequenceDim: function(){
           if(this.greenBright){
               this.greenBright = !this.greenBright;
+              console.log('green lit up');
           }
             else if(this.yellowBright){
                 this.yellowBright = !this.yellowBright;
+                console.log('yellow lit up');
             }
             else if(this.redBright){
               this.redBright = !this.redBright;
+              console.log('red lit up');
             }
             else{
               this.blueBright = !this.blueBright;
+              console.log('blue lit up');
             }
 
           this.sequenceCountdown--;
@@ -150,7 +158,7 @@ export default {
             // call the RESTART function at one second
             setTimeout(this.playSequence, 400);     
            }
-
+           
           // if there are NO MORE lights in the sequence
           else if(this.sequenceCountdown===0){
             this.canTap=true; // user can tap - maybe start a timer
@@ -173,62 +181,68 @@ export default {
         break;
     setTimeout(this.tapDim, 400);
   }
-
-
-
-
     },
     tapDim: function(){
 
     },
 
     captureTap: function(color) {
-      
-        console.log("color: " + color);
+    
 
-          // if CAN TAP is true : it's the players turn
-          if(this.canTap){
-            this.taps.push(color);
-            this.tapsIndex++;
+        // if CAN TAP is true : it's the players turn
+        if(this.canTap){
+        //  console.log( 'taps length[' + this.taps.length + '] tapsIndex[' + this.tapsIndex + ']');
 
-            // if TAPS is as long as SEQUENCE
-            if(this.tapsIndex===this.sequence.length){
-              console.log("tapsIndex: " + this.tapsIndex);
-              console.log("sequence length: " + this.sequence.length);
-
-              // check all pairs
-              this.checkPairs();
-              this.canTap=false;
-              console.log('called check pairs');
-             }
-          }
+          this.taps.push(color);
+          this.tapsIndex++;
+          this.tapsMeasure();
+        }
       },
+    tapsMeasure: function(){
+
+      console.log("just entered tapsMeasure ");
+      // if TAPS is as long as SEQUENCE
+      if(this.tapsIndex===this.sequence.length){
+        this.checkPairs();
+        this.canTap=false;
+        
+       }
+        
+    },
 
 
     checkPairs: function(){
-        var pairMatch=0;
-         for(var i=0; i<this.sequence.length; i++){
-          //  console.log("this.sequence[i]" + i + this.sequence[i]);
-          //  console.log("this.taps[i]" + i + this.taps[i]);
+      var pairMatch=0;
 
-            // if the index of sequence matches the index of taps - move forward
-            if(this.sequence[i]===this.taps[i]){
-              
-                pairMatch++;
+      console.log( 'taps: ' + JSON.stringify( this.taps ) );
+      console.log( 'sequence: ' + JSON.stringify( this.sequence ) );
 
-                  if(pairMatch===this.sequence.length){
-                      console.log('match');
-                      this.reStart();
-                      break;
-            //          console.log('just called reStart function after match');
-                      // add to sequence
-                      // turn off can click
-                    }          
-                }
-            
-             }
+      var sl = this.sequence.length;
 
-            
+      console.log("just entered checkPairs");
+      console.log("1. sl: " + sl);
+      console.log("2. pairMatch count: " + pairMatch);
+      console.log("");
+
+      for(var i=0; i<sl; i++){
+        if(this.sequence[i]===this.taps[i]){
+          pairMatch++;
+          console.log(pairMatch + " match(s)");
+        }
+        else {
+          console.log("mis-match");
+          alert("You are a bad person!");
+          this.destroyGame();
+        }        
+      }
+
+      if(pairMatch===this.sequence.length){
+          console.log('good - let\'s press restart');
+          this.reStart();
+        }
+        else{
+          console.log("this is the second else statement don't do anything");
+        }         
     },
 
     startTimer: function() {
